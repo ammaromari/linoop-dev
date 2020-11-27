@@ -1,0 +1,29 @@
+---
+- name:
+  hosts: repo
+  become: yes
+  tasks:
+    - name: creating volume group in repo server
+      lvg:
+        vg: vg1
+        pvs: /dev/sdb
+      notify: create lv1
+  
+  handlers:
+    - name: create lv1
+      lvol:
+        vg: vg1
+        lv: lv1
+        size: 100%FREE
+      notify: creating an xfs file system for lv1
+    - name: creating an xfs file system for lv1
+      filesystem:
+        fstype: xfs
+        dev: /dev/vg1/lv1
+      notify: mount lv1
+    - name: mount lv1
+      mount:
+        path: /var/ftp/pub
+        src: /dev/vg1/lv1 
+        fstype: xfs
+        state: mounted
